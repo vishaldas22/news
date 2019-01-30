@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
-//import 'package:http/http.dart' as http;
 import 'package:news/categoryScreens/businessScreen.dart';
 import 'package:news/categoryScreens/entertainScreen.dart';
 import 'package:news/categoryScreens/healthScreen.dart';
@@ -177,7 +176,7 @@ class _CategoryState extends State<Category>
               SliverList(
                   delegate: SliverChildListDelegate([
                 SizedBox(
-                  height: 60.0,
+                  height: 35.0,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -199,7 +198,9 @@ class _CategoryState extends State<Category>
                             color: Colors.white,
                             size: 35.0,
                           ),
-                          onPressed: (){},
+                          onPressed: (){
+                            Navigator.pop(context);
+                          },
                           //onPressed: () => Navigator.pus(context, MaterialPageRoute(builder: (context)=> HomePage()),)
                         ),
                       alignment: Alignment.centerRight,
