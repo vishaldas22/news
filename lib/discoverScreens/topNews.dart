@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:news/detailScreen.dart';
+import 'package:news/loader.dart';
 import 'package:news/model/businessModel.dart';
 import 'package:http/http.dart' as http;
 import 'package:news/discoverScreens/recentNews.dart';
@@ -39,6 +40,7 @@ class _TopNewsState extends State<TopNews> with AutomaticKeepAliveClientMixin {
 
   var list_articles;
   var refreshKey = GlobalKey<RefreshIndicatorState>();
+  Future _data;
 
   @override
   void initState() {
@@ -55,7 +57,9 @@ class _TopNewsState extends State<TopNews> with AutomaticKeepAliveClientMixin {
           }
         });
     refreshListArticle();
-//    setState(() {});
+    setState(() {
+      _data = list_articles;
+    });
   }
 
   Future<Null> refreshListArticle() async {
@@ -95,6 +99,9 @@ class _TopNewsState extends State<TopNews> with AutomaticKeepAliveClientMixin {
                           content: article.content,
                           image: article.urlToImage,
                           author: article.author,
+                          description: article.description,
+                          url: article.url,
+                          publishedAt: article.publishedAt,
                         ))),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -150,7 +157,20 @@ class _TopNewsState extends State<TopNews> with AutomaticKeepAliveClientMixin {
             ),
           );
         } else {
-          return Center(child: CircularProgressIndicator());
+          return Center(child: Column(
+            children: <Widget>[
+              ColorLoader4(
+                dotOneColor: Colors.pink,
+                dotTwoColor: Colors.amber,
+                dotThreeColor: Colors.deepOrange,
+                dotType: DotType.diamond,
+                duration: Duration(milliseconds: 1200),
+              ),
+              Text('Fetching news please wait...',style: TextStyle(
+                  color: Colors.white
+              ),),
+            ],
+          ));
         }
       },
     );
