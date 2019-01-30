@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:news/detailScreen.dart';
+import 'package:news/loader.dart';
 import 'package:news/model/businessModel.dart';
 
 import 'package:http/http.dart' as http;
@@ -32,12 +33,16 @@ class ScienceScreen extends StatefulWidget {
 class _ScienceScreenState extends State<ScienceScreen> {
   var list_articles;
   var refreshKey = GlobalKey<RefreshIndicatorState>();
+  Future _data;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     refreshListArticle();
+    setState(() {
+      _data = list_articles;
+    });
   }
 
   Future<Null> refreshListArticle() async {
@@ -54,11 +59,15 @@ class _ScienceScreenState extends State<ScienceScreen> {
     return MaterialApp(
       title: "NEWS",
       theme: ThemeData(primarySwatch: Colors.teal),
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
           title: Text("Science News",style: TextStyle(
               color: Colors.black
           ),),
+          leading: IconButton(icon: Icon(Icons.arrow_back,color: Colors.black,), onPressed: (){
+            Navigator.pop(context);
+          }),
           elevation: 0.0,
           backgroundColor: Colors.white,
           centerTitle: true,
@@ -83,6 +92,9 @@ class _ScienceScreenState extends State<ScienceScreen> {
                                   content: article.content,
                                   image: article.urlToImage,
                                   author: article.author,
+                                  publishedAt: article.publishedAt,
+                                  url: article.url,
+                                  description: article.description,
                                 ))),
                         child: Card(
                           elevation: 1.0,
@@ -150,7 +162,24 @@ class _ScienceScreenState extends State<ScienceScreen> {
                           .toList(),
                     );
                   }
-                  return CircularProgressIndicator();
+                  return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          ColorLoader4(
+                            dotOneColor: Colors.pink,
+                            dotTwoColor: Colors.amber,
+                            dotThreeColor: Colors.deepOrange,
+                            dotType: DotType.diamond,
+                            duration: Duration(milliseconds: 1200),
+                          ),
+                          SizedBox(height: 5.0,),
+                          Text(
+                            'Fetching news please wait...',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ],
+                      ));
                 },
               ),
               key: refreshKey,
