@@ -5,6 +5,7 @@ import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:news/detailScreen.dart';
+import 'package:news/loader.dart';
 import 'package:news/model/businessModel.dart';
 
 class RecentNews extends StatefulWidget {
@@ -28,8 +29,7 @@ class _RecentNewsState extends State<RecentNews> {
 
     if (response.statusCode == 200) {
       List articles = json.decode(response.body)['articles'];
-      setState(() {
-      });
+      setState(() {});
       return articles.map((article) => new Articles.fromJson(article)).toList();
     } else {
       throw Exception('Failed to load article list');
@@ -38,6 +38,7 @@ class _RecentNewsState extends State<RecentNews> {
 
   var list_articles;
   var refreshKey = GlobalKey<RefreshIndicatorState>();
+  Future _data;
 
   @override
   void initState() {
@@ -46,16 +47,18 @@ class _RecentNewsState extends State<RecentNews> {
     connectivity = new Connectivity();
     subscription =
         connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
-          _connectionStatus = result.toString();
-          print(_connectionStatus);
-          if (result == ConnectivityResult.wifi ||
-              result == ConnectivityResult.mobile) {
-            list_articles = fetchArticleBySource();
-          }
-        });
+      _connectionStatus = result.toString();
+      print(_connectionStatus);
+      if (result == ConnectivityResult.wifi ||
+          result == ConnectivityResult.mobile) {
+        list_articles = fetchArticleBySource();
+      }
+    });
 
     refreshListArticle();
-//    setState(() {});
+    setState(() {
+      _data = list_articles;
+    });
   }
 
   @override
@@ -63,7 +66,6 @@ class _RecentNewsState extends State<RecentNews> {
     super.dispose();
     subscription.cancel();
   }
-
 
   Future<Null> refreshListArticle() async {
     refreshKey.currentState?.show(atTop: false);
@@ -87,7 +89,7 @@ class _RecentNewsState extends State<RecentNews> {
           } else if (snapshot.hasData) {
             List<Articles> articles = snapshot.data;
             return Container(
-              height: size.height / 2.5,
+              //height: size.height / 2.5,
               child: Column(
                 children: <Widget>[
                   Padding(
@@ -103,10 +105,10 @@ class _RecentNewsState extends State<RecentNews> {
                             color: Colors.white,
                           ),
                         ),
-                        Text(
-                          "See All",
-                          style: TextStyle(color: Colors.lightBlueAccent),
-                        )
+//                        Text(
+//                          "See All",
+//                          style: TextStyle(color: Colors.lightBlueAccent),
+//                        )
                       ],
                     ),
                   ),
@@ -128,10 +130,11 @@ class _RecentNewsState extends State<RecentNews> {
                                               content: article.content,
                                               image: article.urlToImage,
                                               author: article.author,
+                                              url: article.url,
+                                              publishedAt: article.publishedAt,
                                             ))),
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     Expanded(
                                       child: SizedBox(
@@ -151,8 +154,7 @@ class _RecentNewsState extends State<RecentNews> {
                                                     article.urlToImage,
                                                     fit: BoxFit.fill,
                                                   )
-                                                : Image.asset(
-                                                    'images/logo.jpg',
+                                                : Image.asset('images/logo.jpg',
                                                     fit: BoxFit.cover),
                                           ),
                                         ),
@@ -162,8 +164,7 @@ class _RecentNewsState extends State<RecentNews> {
                                       height: 10.0,
                                     ),
                                     Padding(
-                                      padding:
-                                          const EdgeInsets.only(left: 4.0),
+                                      padding: const EdgeInsets.only(left: 4.0),
                                       child: SizedBox(
                                         width: 130.0,
                                         height: 130.0,
@@ -187,7 +188,25 @@ class _RecentNewsState extends State<RecentNews> {
               ),
             );
           } else {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+                child: Column(
+              children: <Widget>[
+                ColorLoader4(
+                  dotOneColor: Colors.pink,
+                  dotTwoColor: Colors.amber,
+                  dotThreeColor: Colors.deepOrange,
+                  dotType: DotType.diamond,
+                  duration: Duration(milliseconds: 1200),
+                ),
+                SizedBox(
+                  height: 10.0,
+                ),
+                Text(
+                  'Fetching news please wait...',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ));
           }
         });
   }
