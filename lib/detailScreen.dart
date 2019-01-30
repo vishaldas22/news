@@ -1,22 +1,81 @@
 import 'package:flutter/material.dart';
 import 'package:news/ui/bookmark.dart';
 import 'package:share/share.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DetailScreen extends StatefulWidget {
-  final String title, description, image, author, content;
+  final String title, description, image, author, content, url, publishedAt;
 
   DetailScreen(
-      {this.title, this.image, this.description, this.author, this.content});
+      {this.title,
+      this.image,
+      this.description,
+      this.author,
+      this.content,
+      this.url,
+      this.publishedAt});
 
   @override
   _DetailScreenState createState() => _DetailScreenState();
 }
 
 class _DetailScreenState extends State<DetailScreen> {
+  final DocumentReference documentReference =
+      Firestore.instance.collection('myData').document();
+
+  QuerySnapshot querySnapshot;
+
+   alreadyExists() async {
+    try {
+      final QuerySnapshot result = await Firestore.instance
+          .collection('myData')
+          .where('title', isEqualTo: widget.title)
+          .limit(1)
+          .getDocuments();
+      final List<DocumentSnapshot> documents = result.documents;
+      if (documents.length == 1) {
+        final snackBar = SnackBar(
+          content: Text('Bookmark already exists!'),
+          duration: Duration(seconds: 2),
+        );
+        // Find the Scaffold in the Widget tree and use it to show a SnackBar!
+        _scaffoldkey.currentState
+            .showSnackBar(snackBar);
+      }
+      if (documents.length == 0) {
+          addData();
+      }
+    } catch (e) {
+      print("Error");
+    }
+  }
+
+  void addData(){
+    Firestore.instance.document('myData/${widget.title}').setData({
+      'author': widget.author,
+      'content': widget.content,
+      'image': widget.image,
+      'publishedAt': widget.publishedAt,
+      'title': widget.title,
+      'url': widget.url,
+    });
+    final snackBar = SnackBar(
+      content: Text('Bookmark added!'),
+      duration: Duration(seconds: 2),
+    );
+    // Find the Scaffold in the Widget tree and use it to show a SnackBar!
+    _scaffoldkey.currentState
+        .showSnackBar(snackBar);
+  }
+
+  final GlobalKey<ScaffoldState> _scaffoldkey = new GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
+      key: _scaffoldkey,
       body: ListView(
         children: <Widget>[
           Container(
@@ -36,53 +95,34 @@ class _DetailScreenState extends State<DetailScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      GestureDetector(
-                        child: Icon(
-                          Icons.arrow_back,
+                      IconButton(
+                          icon: Icon(Icons.arrow_back),
                           color: Colors.white,
-                        ),
-                        onTap: () { print('Damn You');},
-                      ),
-                      GestureDetector(
-                        child: Icon(
-                          Icons.share,
-                          color: Colors.white,
-                        ),
-                        onTap: (){
-                          Share.share('${widget.image}' +
-                              '\n${widget.title}' +
-                              '\n${widget.description}');
-                        }
-                      ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          }),
+                      Row(
+                        children: <Widget>[
+                          IconButton(
+                              icon: Icon(
+                                Icons.bookmark,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {
+                                alreadyExists();
+
+                              }),
+                          GestureDetector(
+                              child: Icon(
+                                Icons.share,
+                                color: Colors.white,
+                              ),
+                              onTap: () {
+                                Share.share('${widget.url}');
+                              }),
+                        ],
+                      )
                     ],
-                  ),
-                ),
-                InkWell(
-//                  onTap: () => Navigator.push(
-//                      context,
-//                      MaterialPageRoute(
-//                          builder: (context) => Bookmark(
-//                            title: widget.title,
-//                            description: widget.description,
-//                            image: widget.image,
-//                            author: widget.author,
-//                          ))),
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 15.0),
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: Container(
-                        height: 60.0,
-                        width: 60.0,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25.0),
-                            color: Colors.blue),
-                        child: Icon(
-                          Icons.bookmark,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -102,23 +142,46 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: 15.0, left: 15.0),
-            child: Row(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Icon(
-                  Icons.edit,
-                  color: Colors.grey,
-                  size: 15.0,
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.edit,
+                      color: Colors.grey,
+                      size: 15.0,
+                    ),
+                    SizedBox(
+                      width: 5.0,
+                    ),
+                    Text(
+                      widget.author == null ? 'No Author' : widget.author,
+                      style: TextStyle(
+                        color: Colors.grey,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                SizedBox(
-                  width: 5.0,
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.date_range,
+                      color: Colors.grey,
+                      size: 15.0,
+                    ),
+                    SizedBox(
+                      width: 5.0,
+                    ),
+                    Text(
+                      widget.publishedAt == null
+                          ? ''
+                          : widget.publishedAt.toString(),
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
                 ),
-                Text(
-                  widget.author == null ? 'No Author' : widget.author,
-                  style: TextStyle(
-                    color: Colors.grey,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                )
               ],
             ),
           ),
@@ -132,16 +195,37 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 15.0, left: 15.0, right: 15.0),
-            child: Text(
-              widget.content == null
-                  ? 'Sorry this document has no content'
-                  : widget.content,
-              //overflow: TextOverflow.clip,
-            ),
-          ),
+              padding:
+                  const EdgeInsets.only(top: 15.0, left: 15.0, right: 15.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    widget.content == null ? widget.title : widget.content,
+                    overflow: TextOverflow.clip,
+                  ),
+                  GestureDetector(
+                    child: Text('Read more',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontStyle: FontStyle.italic,
+                        )),
+                    onTap: () {
+                      launchUrl(widget.url);
+                    },
+                  )
+                ],
+              )),
         ],
       ),
     );
+  }
+
+  launchUrl(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw ('Couldn\'t launch ${url}');
+    }
   }
 }
