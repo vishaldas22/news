@@ -12,7 +12,7 @@ String API_KEY = '0ca85f22bce44565ba4fee8d2224adb5';
 
 Future<List<Articles>> fetchArticleBySource() async {
   final response = await http.get(
-      'https://newsapi.org/v2/top-headlines?sources=medical-news-today&apiKey=${API_KEY}');
+      'https://newsapi.org/v2/top-headlines?sources=national-geographic&apiKey=${API_KEY}');
 
   if (response.statusCode == 200) {
     List articles = json.decode(response.body)['articles'];
@@ -22,15 +22,15 @@ Future<List<Articles>> fetchArticleBySource() async {
   }
 }
 
-class HealthScreen extends StatefulWidget {
+class ScienceScreen extends StatefulWidget {
   final Source source;
 
-  HealthScreen({Key key,  this.source}) : super(key: key);
+  ScienceScreen({Key key,  this.source}) : super(key: key);
   @override
-  _HealthScreenState createState() => _HealthScreenState();
+  _ScienceScreenState createState() => _ScienceScreenState();
 }
 
-class _HealthScreenState extends State<HealthScreen> {
+class _ScienceScreenState extends State<ScienceScreen> {
   var list_articles;
   var refreshKey = GlobalKey<RefreshIndicatorState>();
   Future _data;
@@ -49,7 +49,6 @@ class _HealthScreenState extends State<HealthScreen> {
     refreshKey.currentState?.show(atTop: false);
     await Future.delayed(Duration(seconds: 2));
 
-
     setState(() {
       list_articles = fetchArticleBySource();
     });
@@ -63,8 +62,8 @@ class _HealthScreenState extends State<HealthScreen> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Text("Health News",style: TextStyle(
-            color: Colors.black
+          title: Text("Science News",style: TextStyle(
+              color: Colors.black
           ),),
           leading: IconButton(icon: Icon(Icons.arrow_back,color: Colors.black,), onPressed: (){
             Navigator.pop(context);
