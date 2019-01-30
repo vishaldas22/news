@@ -3,11 +3,13 @@ import 'dart:convert';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
-import 'package:news/detailScreen.dart';
+import 'package:intl/intl.dart';
 import 'package:news/discoverScreens/topNews.dart';
 import 'package:news/model/businessModel.dart';
 import 'package:http/http.dart' as http;
 import 'package:news/discoverScreens/recentNews.dart';
+import 'package:news/profile/profile.dart';
+
 
 class Discover extends StatefulWidget {
   final Source source;
@@ -20,65 +22,80 @@ class Discover extends StatefulWidget {
 
 class _DiscoverState extends State<Discover>
     with AutomaticKeepAliveClientMixin {
-//  String API_KEY = '0ca85f22bce44565ba4fee8d2224adb5';
-//  var _connectionStatus = 'Unknown';
-//  Connectivity connectivity;
-//  StreamSubscription<ConnectivityResult> subscription;
-//
-//  Future<List<Articles>> fetchArticleBySource() async {
-//    final response = await http.get(
-//        'https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey=${API_KEY}');
-//
-//    if (response.statusCode == 200) {
-//      List articles = json.decode(response.body)['articles'];
-//      setState(() {
-//      });
-//      return articles.map((article) => new Articles.fromJson(article)).toList();
-//    } else {
-//      throw Exception('Failed to load article list');
-//    }
-//  }
-//
-//  var list_articles;
-//  var refreshKey = GlobalKey<RefreshIndicatorState>();
-//
-//  @override
-//  void initState() {
-//    // TODO: implement initState
-//    super.initState();
-//    connectivity = new Connectivity();
-//    subscription =
-//        connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
-//          _connectionStatus = result.toString();
-//          print(_connectionStatus);
-//          if (result == ConnectivityResult.wifi ||
-//              result == ConnectivityResult.mobile) {
-//            list_articles = fetchArticleBySource();
-//          }
-//        });
-//
-//    refreshListArticle();
-//    //setState(() {});
-//  }
-//
-//  @override
-//  void dispose() {
-//    super.dispose();
-//    subscription.cancel();
-//  }
-//
-//
-//  Future<Null> refreshListArticle() async {
-//    refreshKey.currentState?.show(atTop: false);
-//    await Future.delayed(Duration(seconds: 2));
-//    setState(() {
-//      list_articles = fetchArticleBySource();
-//    });
-//  }
+  String API_KEY = '0ca85f22bce44565ba4fee8d2224adb5';
+  var _connectionStatus = 'Unknown';
+  Connectivity connectivity;
+  StreamSubscription<ConnectivityResult> subscription;
+
+  Future<List<Articles>> fetchArticleBySource() async {
+    final response = await http.get(
+        'https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey=${API_KEY}');
+
+    if (response.statusCode == 200) {
+      List articles = json.decode(response.body)['articles'];
+      setState(() {
+      });
+      return articles.map((article) => new Articles.fromJson(article)).toList();
+    } else {
+      throw Exception('Failed to load article list');
+    }
+  }
+
+  Future<List<Articles>> fetchArticlesBySource() async {
+    final response = await http.get(
+        'https://newsapi.org/v2/top-headlines?sources=google-news&apiKey=${API_KEY}');
+
+    if (response.statusCode == 200) {
+      List articles = json.decode(response.body)['articles'];
+      setState(() {});
+      return articles.map((article) => new Articles.fromJson(article)).toList();
+    } else {
+      throw Exception('Failed to load article list');
+    }
+  }
+
+  var list_articles;
+  var list_article;
+  var refreshKey = GlobalKey<RefreshIndicatorState>();
+  var now = new DateFormat.MMMMEEEEd().format(new DateTime.now());
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    connectivity = new Connectivity();
+    subscription =
+        connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
+          _connectionStatus = result.toString();
+          print(_connectionStatus);
+          if (result == ConnectivityResult.wifi ||
+              result == ConnectivityResult.mobile) {
+            list_articles = fetchArticleBySource();
+          }
+        });
+
+    refreshListArticle();
+    //setState(() {});
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    subscription.cancel();
+  }
+
+  Future<Null> refreshListArticle() async {
+    refreshKey.currentState?.show(atTop: false);
+    await Future.delayed(Duration(seconds: 2));
+    setState(() {
+      list_articles = fetchArticleBySource();
+      list_article = fetchArticlesBySource();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
+    //double height = MediaQuery.of(context).size.height;
     super.build(context);
     return Container(
       decoration: BoxDecoration(color: Colors.black87),
@@ -88,28 +105,32 @@ class _DiscoverState extends State<Discover>
           top: 15.0,
           right: 15.0,
         ),
-        child: ListView(
-          children: <Widget>[
-            topArea(),
-            SizedBox(
-              height: 10.0,
-            ),
-            //slideCard(height / 2.3),
-            TopNews(),
-            SizedBox(
-              height: 15.0,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 4.0),
-              child: Divider(
-                color: Colors.white,
+        child: RefreshIndicator(
+          key: refreshKey,
+          onRefresh: refreshListArticle,
+          child: ListView(
+            children: <Widget>[
+              topArea(),
+              SizedBox(
+                height: 10.0,
               ),
-            ),
-            SizedBox(
-              height: 10.0,
-            ),
-            RecentNews(),
-          ],
+              //slideCard(height / 2.3),
+              TopNews(),
+              SizedBox(
+                height: 5.0,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 4.0),
+                child: Divider(
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(
+                height: 10.0,
+              ),
+              RecentNews(),
+            ],
+          ),
         )
       ),
     );
@@ -123,7 +144,7 @@ class _DiscoverState extends State<Discover>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              "WEDNESDAY, NOVEMBER 29",
+              "$now",
               style: TextStyle(
                 color: Colors.grey,
                 fontWeight: FontWeight.bold,
@@ -142,12 +163,15 @@ class _DiscoverState extends State<Discover>
           ],
         ),
         InkWell(
-          //onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => )),
-          child: CircleAvatar(
-            radius: 25.0,
-            //backgroundColor: Colors.transparent,
-            backgroundImage: NetworkImage(
-              "https://images.pexels.com/photos/1138409/pexels-photo-1138409.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Profile())),
+          child: Hero(
+            tag: 'img',
+            child: CircleAvatar(
+              radius: 25.0,
+              //backgroundColor: Colors.transparent,
+              backgroundImage: NetworkImage(
+                "https://images.pexels.com/photos/1138409/pexels-photo-1138409.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+              ),
             ),
           ),
         ),
